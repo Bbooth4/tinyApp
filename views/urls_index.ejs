@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>TinyApp</title>
+</head>
+<body>
+  <h1>List of Tiny URLs</h1>
+  <ul>
+  <%for(key in urls){%>
+    <li>
+      <p><%=`${key}: ${urls[key]}`%></p>
+    </li>
+  <%}%>
+    <li>
+      <a href=#>Back</a>
+    </li>
+  </ul>
+</body>
+</html>
