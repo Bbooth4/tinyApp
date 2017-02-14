@@ -4,15 +4,18 @@
   <title>TinyApp</title>
 </head>
 <body>
-  <h1>List of Tiny URLs</h1>
+  <% include ./partials/_headers %>
   <ul>
   <%for(key in urls){%>
     <li>
-      <p><%=`${key}: ${urls[key]}`%></p>
+      <p><%=`${key}: ${urls[key]} `%><a href=`http://localhost:8080/urls/<%=${key}%>`>Edit</a></p>
+      <form method="POST" action=`/urls/<%=${key}%>delete`>
+        <input type="submit" value="Delete">
+      </form>
     </li>
   <%}%>
     <li>
-      <a href=#>Back</a>
+      <a href=http://localhost:8080/urls/new>Create A New Tiny URL</a>
     </li>
   </ul>
 </body>
