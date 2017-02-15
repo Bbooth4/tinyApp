@@ -8,8 +8,9 @@
   <ul>
   <%for(key in urls){%>
     <li>
-      <p><%=`${key}: ${urls[key]} `%><a href=`http://localhost:8080/urls/<%=${key}%>`>Edit</a></p>
-      <form method="POST" action=`/urls/<%=${key}%>delete`>
+      <p><%=key%>: <%=urls[key] %>
+      <a href='./urls/<%=key%>'>Edit</a></p>
+      <form method="POST" action='./urls/<%=key%>/delete'>
         <input type="submit" value="Delete">
       </form>
     </li>
