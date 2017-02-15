@@ -6,8 +6,8 @@ const morgan = require("morgan");
 const PORT = process.env.PORT || 8080;
 
 app.set("view engine", "ejs");
-app.set(bodyParser.json());
 app.use(morgan('dev'));
+app.set(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.use(cookieSession({
@@ -33,33 +33,38 @@ const urlDatabase = {
 // ---------------------------- GETS -------------------------- //
 
 app.get("/", (req, res) => {
-  let templateVars = {
-    urls: urlDatabase };
   res.redirect("/urls");
 });
 
 app.get("/urls", (req, res) => {
+  let user = req.session.email;
   let templateVars = {
+    email: req.session.email,
     urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
+  let user = req.session.email;
   let templateVars = {
-    shortURL: req.params.id,
-    longURL: urlDatabase[req.params.id] };
+    email: req.session.email,
+    shortURL: user,
+    longURL: urlDatabase[user] };
   res.render("urls_new", templateVars);
 });
 
 app.get("/register", (req, res) => {
   let templateVars = {
-    shortURL: req.params.id,
-    longURL: urlDatabase[req.params.id] };
+    email: req.session.email,
+    shortURL: req.session.email,
+    longURL: urlDatabase[req.session.email] };
   res.render("urls_register", templateVars);
 });
 
 app.get(`/urls/:id`, (req, res) => {
+  let user = req.session.email;
   let templateVars = {
+    email: req.session.email,
     shortURL: req.params.id,
     longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
@@ -68,22 +73,30 @@ app.get(`/urls/:id`, (req, res) => {
 
 // -------------------------- POSTS -------------------------- //
 
+app.post("/logout", (req, res) => {
+  req.session.email = null;
+  res.redirect("/urls");
+})
+
 app.post("/urls", (req, res) => {
   const randomURLString = generateRandomString();
+  let user = req.session.email;
   urlDatabase[randomURLString] = req.body.longURL;
   res.redirect(`urls/${randomURLString}`);
 });
 
 app.post("/register", (req, res) => {
   const randomURLString = generateRandomString();
-  // req.session.email
-  urlDatabase[randomURLString] = req.session.email;
+  let email = req.body.email;
+   // sets the cookie
+  req.session.email = email;
+  // urlDatabase[randomURLString] = req.body.longURL;
   res.redirect(`/urls`);
 });
 
 app.post("/login", (req, res) => {
-  lurlDatabase[req.params.id] = req.body.longURL;
-  urlDatabase[randomURLString] = req.body.longURL;
+  urlDatabase[req.params.id] = req.body.longURL;
+  // urlDatabase[randomURLString] = req.body.longURL;
   res.redirect(`/urls`);
 });
 
