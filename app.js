@@ -1,16 +1,23 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
+const cookieSession = require('cookie-session');
 const morgan = require("morgan");
 const PORT = process.env.PORT || 8080;
 
 app.set("view engine", "ejs");
+app.set(bodyParser.json());
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
 
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}));
+
 function generateRandomString() {
   const seedString = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let randomString = ''
+  let randomString = '';
   while (randomString.length !== 6) {
     let randomCharacterIndex = Math.floor(Math.random() * seedString.length);
     randomString += seedString[randomCharacterIndex];
@@ -23,7 +30,7 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-// -------------------------- GETS ---------------------------- //
+// ---------------------------- GETS -------------------------- //
 
 app.get("/", (req, res) => {
   let templateVars = {
@@ -33,8 +40,7 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
   let templateVars = {
-    urls: urlDatabase,
-    shortURL: req.params.id };
+    urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
@@ -43,6 +49,13 @@ app.get("/urls/new", (req, res) => {
     shortURL: req.params.id,
     longURL: urlDatabase[req.params.id] };
   res.render("urls_new", templateVars);
+});
+
+app.get("/register", (req, res) => {
+  let templateVars = {
+    shortURL: req.params.id,
+    longURL: urlDatabase[req.params.id] };
+  res.render("urls_register", templateVars);
 });
 
 app.get(`/urls/:id`, (req, res) => {
@@ -56,9 +69,22 @@ app.get(`/urls/:id`, (req, res) => {
 // -------------------------- POSTS -------------------------- //
 
 app.post("/urls", (req, res) => {
-  let randomURLString = generateRandomString();
+  const randomURLString = generateRandomString();
   urlDatabase[randomURLString] = req.body.longURL;
   res.redirect(`urls/${randomURLString}`);
+});
+
+app.post("/register", (req, res) => {
+  const randomURLString = generateRandomString();
+  // req.session.email
+  urlDatabase[randomURLString] = req.session.email;
+  res.redirect(`/urls`);
+});
+
+app.post("/login", (req, res) => {
+  lurlDatabase[req.params.id] = req.body.longURL;
+  urlDatabase[randomURLString] = req.body.longURL;
+  res.redirect(`/urls`);
 });
 
 app.post("/urls/:id/update", (req, res) => {
@@ -67,7 +93,7 @@ app.post("/urls/:id/update", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id]
+  delete urlDatabase[req.params.id];
   res.redirect(`/urls`);
 });
 
