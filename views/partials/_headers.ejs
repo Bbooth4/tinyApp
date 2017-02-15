@@ -1,6 +1,9 @@
 <h1>Tiny URLS</h1>
-<p>Username: <%=email%></p>
-<a href="./register">Register Now</a>
-<form action="/register" method="POST">
-  <input type="submit" value="Logout" name="Logout">
-</form>
+<%if (email) {%>
+  <p>Username: <%=email%></p>
+  <form action="/logout" method="POST">
+    <input type="submit" value="Logout" name="Logout">
+  </form>
+<%} else {%>
+  <a href="./register">Register Now</a>
+<%}%>
