@@ -27,38 +27,51 @@ function generateRandomString() {
 };
 
 let user = {
-  "booth.brandon4@gmail.com": {
-    id: "b2xVn2",
-    email: "booth.brandon4@gmail.com",
-    password: "b",
-    urlDatabase: {
-      "b2xVn2": "http://www.google.com"
-    }
-  }
+  // "booth.brandon4@gmail.com": {
+  //   id: "b2xVn2",
+  //   email: "booth.brandon4@gmail.com",
+  //   password: "b",
+  //   urlDatabase: {
+  //     "b2xVn2": "http://www.google.com"
+  //   }
+  // }
 };
 
 // ---------------------------- GETS -------------------------- //
 
 app.get("/", (req, res) => {
-  res.redirect("/urls");
+  let userId = req.session.email;
+  if (userId) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls", (req, res) => {
   let userId = req.session.email;
-  let templateVars = {
-    email: userId,
-    urls: user[userId].urlDatabase };
-  res.render("urls_index", templateVars);
+  if (!userId) {
+    res.status(403).send("You must be logged in to view and create tiny URL!");
+  } else {
+    let templateVars = {
+      email: userId,
+      urls: user[userId].urlDatabase };
+    res.render("urls_index", templateVars);
+  }
 });
 
 app.get("/urls/new", (req, res) => {
   let userId = req.session.email;
-  let templateVars = {
-    email: userId,
-    shortURL: userId,
-    longURL: req.body.longURL,
-    urls: user[userId].urlDatabase  };
-  res.render("urls_new", templateVars);
+  if (!userId) {
+    res.status(403).send("You must be logged in to view and create tiny URL!");
+  } else {
+    let templateVars = {
+      email: userId,
+      shortURL: userId,
+      longURL: req.body.longURL,
+      urls: user[userId].urlDatabase  };
+    res.render("urls_new", templateVars);
+  }
 });
 
 app.get("/register", (req, res) => {
@@ -79,12 +92,16 @@ app.get("/login", (req, res) => {
 
 app.get(`/urls/:id`, (req, res) => {
   let userId = req.session.email;
-  let templateVars = {
-    email: userId,
-    shortURL: req.params.id,
-    longURL: user[userId].urlDatabase[req.params.id],
-    urls: user[userId].urlDatabase  };
-  res.render("urls_show", templateVars);
+  if (!userId) {
+    res.status(403).send("You must be logged in to view and create tiny URL!");
+  } else {
+    let templateVars = {
+      email: userId,
+      shortURL: req.params.id,
+      longURL: user[userId].urlDatabase[req.params.id],
+      urls: user[userId].urlDatabase  };
+    res.render("urls_show", templateVars);
+  }
 });
 
 
@@ -104,12 +121,13 @@ app.post("/urls", (req, res) => {
 
 app.post("/register", (req, res) => {
   const randomURLString = generateRandomString();
-  let userId = req.session.email;
   let email = req.body.email;
-  let password = req.body.password
+  let password = req.body.password;
   let saltRounds = 10;
   let hashedPassword = bcrypt.hashSync(password, saltRounds);
-  if (!user[req.body.email]) {
+  if (req.body.password === "") {
+    res.status(403).send("You failed to provide an adequate password with at least one character.");
+  } else if (!user[req.body.email]) {
     req.session.email = email;
     user[req.body.email] = {
       id: randomURLString,
@@ -124,9 +142,10 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  let userId = req.session.email;
   let email = req.body.email;
-  if (user[req.body.email] && user[req.body.email].password === req.body.password) {
+  let hashedPassword = user[email].password;
+  let saltRounds = 10;
+  if (user[req.body.email] && bcrypt.compareSync(req.body.password, hashedPassword)) {
     req.session.email = email;
     res.redirect(`/urls`);
   } else {
