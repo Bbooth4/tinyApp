@@ -106,14 +106,15 @@ app.post("/register", (req, res) => {
   const randomURLString = generateRandomString();
   let userId = req.session.email;
   let email = req.body.email;
-  let bcrptPassword = req.body.password
-  let saltRound = 10;
+  let password = req.body.password
+  let saltRounds = 10;
+  let hashedPassword = bcrypt.hashSync(password, saltRounds);
   if (!user[req.body.email]) {
     req.session.email = email;
     user[req.body.email] = {
       id: randomURLString,
       email: req.body.email,
-      password: req.body.password,
+      password: hashedPassword,
       urlDatabase: {}
       }
     res.redirect(`/urls`);
