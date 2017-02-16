@@ -44,9 +44,9 @@ let user = {
 app.get("/", (req, res) => {
   let userId = req.session.email;
   if (userId) {
-    res.redirect("/urls");
+    res.status(200).redirect("/urls");
   } else {
-    res.redirect("/login");
+    res.status(200).redirect("/login");
   }
 });
 
@@ -58,7 +58,7 @@ app.get("/urls", (req, res) => {
     let templateVars = {
       email: userId,
       urls: user[userId].urlDatabase };
-    res.render("urls_index", templateVars);
+    res.status(200).render("urls_index", templateVars);
   }
 });
 
@@ -72,7 +72,7 @@ app.get("/urls/new", (req, res) => {
       shortURL: userId,
       longURL: req.body.longURL,
       urls: user[userId].urlDatabase  };
-    res.render("urls_new", templateVars);
+    res.status(200).render("urls_new", templateVars);
   }
 });
 
@@ -81,7 +81,7 @@ app.get("/register", (req, res) => {
   let templateVars = {
     email: userId
   };
-  res.render("urls_register", templateVars);
+  res.status(200).render("urls_register", templateVars);
 });
 
 app.get("/login", (req, res) => {
@@ -89,31 +89,39 @@ app.get("/login", (req, res) => {
   let templateVars = {
     email: userId
   };
-  res.render("urls_login", templateVars);
+  res.status(200).render("urls_login", templateVars);
 });
 
 app.get(`/urls/:id`, (req, res) => {
   let userId = req.session.email;
+  console.log(user[userId])
   if (!userId) {
-    res.status(403).send("You must be logged in to view and create tiny URL!");
+    res.status(401).send("You must be logged in to view and create a tiny URL!");
+    // if user is not logged in:
+  } else if (userId !== user[userId].email) {
+    res.status(403).send("You do not have the necessary permissions to access this link. Login with this <a href='http://localhost:8080/login'>link</a> to access your own tiny url links.");
+    // if logged in user does not match the user that owns this url:
+  } else if (!user[userId].urlDatabase[req.params.id]) {
+    res.status(404).send("That URL does not exist!");
+    // if url w/ :id does not exist:
   } else {
     let templateVars = {
       email: userId,
       shortURL: req.params.id,
       longURL: user[userId].urlDatabase[req.params.id],
       urls: user[userId].urlDatabase  };
-    res.render("urls_show", templateVars);
+    res.status(200).render("urls_show", templateVars);
   }
 });
 
 app.get("/u/:id", (req, res) => {
   let located = false;
   let email;
-  var webAdress;
+  let webAdress;
   for (email in user) {
     for (longURL in user[email].urlDatabase) {
       if(req.params.id === longURL) {
-        var webAdress = user[email].urlDatabase[longURL];
+        webAdress = user[email].urlDatabase[longURL];
         located = true;
       }
     }
@@ -121,7 +129,7 @@ app.get("/u/:id", (req, res) => {
   if (located === false) {
     res.status(404).send('That url does not exist!');
   } else {
-    res.redirect(webAdress);
+    res.status(200).redirect(webAdress);
   }
 })
 
@@ -130,14 +138,14 @@ app.get("/u/:id", (req, res) => {
 
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect("/login");
+  res.status(200).redirect("/login");
 })
 
 app.post("/urls", (req, res) => {
   const randomURLString = generateRandomString();
   let userId = req.session.email;
   user[userId].urlDatabase[randomURLString] = req.body.longURL;
-  res.redirect(`urls/${randomURLString}`);
+  res.status(200).redirect(`urls/${randomURLString}`);
 });
 
 app.post("/register", (req, res) => {
@@ -156,19 +164,17 @@ app.post("/register", (req, res) => {
       password: hashedPassword,
       urlDatabase: {}
       }
-    res.redirect(`/urls`);
+    res.status(200).redirect(`/`);
   } else {
     res.status(403).send("That user already exists!");
   }
 });
 
 app.post("/login", (req, res) => {
-  let email = req.body.email;
-  let hashedPassword = user[email].password;
-  let saltRounds = 10;
-  if (user[req.body.email] && bcrypt.compareSync(req.body.password, hashedPassword)) {
+  const email = req.body.email;
+  if (user[email] && bcrypt.compareSync(req.body.password, user[email].password)) {
     req.session.email = email;
-    res.redirect(`/urls`);
+    res.status(200).redirect(`/`);
   } else {
     res.status(403).send("Incorrect login credentials!");
   }
@@ -177,17 +183,13 @@ app.post("/login", (req, res) => {
 app.post("/urls/:id/update", (req, res) => {
   let userId = req.session.email;
   user[userId].urlDatabase[req.params.id] = req.body.longURL;
-  res.redirect(`/urls`);
+  res.status(200).redirect(`/urls`);
 });
 
 app.post("/urls/:id/delete", (req, res) => {
   let userId = req.session.email;
   delete user[userId].urlDatabase[req.params.id];
-  res.redirect(`/urls`);
-});
-
-app.post("/urls/new", (req, res) => {
-  res.redirect("/urls");
+  res.status(200).redirect(`/urls`);
 });
 
 app.listen(PORT, () => {
