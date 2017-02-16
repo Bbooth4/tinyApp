@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
+const methodOverride = require('method-override');
 const bcrypt = require('bcrypt');
 const morgan = require("morgan");
 const PORT = process.env.PORT || 8080;
@@ -10,6 +11,7 @@ app.set("view engine", "ejs");
 app.use(morgan('dev'));
 app.set(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(methodOverride('_method'));
 
 app.use(cookieSession({
   name: 'session',
@@ -27,14 +29,14 @@ function generateRandomString() {
 };
 
 let user = {
-  // "booth.brandon4@gmail.com": {
-  //   id: "b2xVn2",
-  //   email: "booth.brandon4@gmail.com",
-  //   password: "b",
-  //   urlDatabase: {
-  //     "b2xVn2": "http://www.google.com"
-  //   }
-  // }
+ "booth.brandon4@gmail.com": {
+    id: "b2xVn2",
+    email: "booth.brandon4@gmail.com",
+    password: bcrypt.hashSync("b", 10),
+    urlDatabase: {
+     "b2xVn3": "http://www.google.com"
+   }
+  }
 };
 
 // ---------------------------- GETS -------------------------- //
@@ -103,6 +105,25 @@ app.get(`/urls/:id`, (req, res) => {
     res.render("urls_show", templateVars);
   }
 });
+
+app.get("/u/:id", (req, res) => {
+  let located = false;
+  let email;
+  var webAdress;
+  for (email in user) {
+    for (longURL in user[email].urlDatabase) {
+      if(req.params.id === longURL) {
+        var webAdress = user[email].urlDatabase[longURL];
+        located = true;
+      }
+    }
+  }
+  if (located === false) {
+    res.status(404).send('That url does not exist!');
+  } else {
+    res.redirect(webAdress);
+  }
+})
 
 
 // -------------------------- POSTS -------------------------- //
