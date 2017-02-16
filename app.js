@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
+const bcrypt = require('bcrypt');
 const morgan = require("morgan");
 const PORT = process.env.PORT || 8080;
 
@@ -55,19 +56,25 @@ app.get("/urls/new", (req, res) => {
   let templateVars = {
     email: userId,
     shortURL: userId,
-    longURL: req.body.longURL };
+    longURL: req.body.longURL,
+    urls: user[userId].urlDatabase  };
   res.render("urls_new", templateVars);
 });
-// user[userId].urlDatabase
 
 app.get("/register", (req, res) => {
   let userId = req.session.email;
   let templateVars = {
-    email: userId,
-    // shortURL: req.params.id,
-    // longURL: user.userId.urlDatabase[userId]
+    email: userId
   };
   res.render("urls_register", templateVars);
+});
+
+app.get("/login", (req, res) => {
+  let userId = req.session.email;
+  let templateVars = {
+    email: userId
+  };
+  res.render("urls_login", templateVars);
 });
 
 app.get(`/urls/:id`, (req, res) => {
@@ -75,7 +82,8 @@ app.get(`/urls/:id`, (req, res) => {
   let templateVars = {
     email: userId,
     shortURL: req.params.id,
-    longURL: user[userId].urlDatabase[req.params.id] };
+    longURL: user[userId].urlDatabase[req.params.id],
+    urls: user[userId].urlDatabase  };
   res.render("urls_show", templateVars);
 });
 
@@ -84,7 +92,7 @@ app.get(`/urls/:id`, (req, res) => {
 
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect("/register");
+  res.redirect("/login");
 })
 
 app.post("/urls", (req, res) => {
@@ -98,18 +106,31 @@ app.post("/register", (req, res) => {
   const randomURLString = generateRandomString();
   let userId = req.session.email;
   let email = req.body.email;
-   // sets the cookie
-  req.session.email = email;
-  // user[userId].urlDatabase[randomURLString] = req.body.longURL;
-  res.redirect(`/urls`);
+  let bcrptPassword = req.body.password
+  let saltRound = 10;
+  if (!user[req.body.email]) {
+    req.session.email = email;
+    user[req.body.email] = {
+      id: randomURLString,
+      email: req.body.email,
+      password: req.body.password,
+      urlDatabase: {}
+      }
+    res.redirect(`/urls`);
+  } else {
+    res.status(403).send("That user already exists!");
+  }
 });
 
 app.post("/login", (req, res) => {
   let userId = req.session.email;
   let email = req.body.email;
-   // sets the cookie
-  req.session.email = email;
-  res.redirect(`/urls`);
+  if (user[req.body.email] && user[req.body.email].password === req.body.password) {
+    req.session.email = email;
+    res.redirect(`/urls`);
+  } else {
+    res.status(403).send("Incorrect login credentials!");
+  }
 });
 
 app.post("/urls/:id/update", (req, res) => {

@@ -4,13 +4,13 @@
     <title>TinyApp</title>
   </head>
   <body style="font-size:20px; padding:50px;">
-    <% include ./partials/_headers %>
+    <h1>Tiny URLS</h1>
     <form action="/login" method="POST">
-      <label for="longURL">Register Now! </label>
+      <label for="longURL">Login Now!</label>
       <p>Email: <input type="email" name="email"></p>
       <p>Password: <input type="password" name="password"></p>
       <input type="submit" name="Submit">
-      <a href=./urls>Back</a>
     </form>
+    <p>Don't have an account? <a href="./register">Register Now!</a></p>
   </body>
 </html>
